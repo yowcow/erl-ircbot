@@ -17,13 +17,13 @@
     notice/2
 ]).
 
--define(RECONNECT_INTERVAL, 30 * 1000).
+-define(RECONNECT_INTERVAL, 15 * 1000).
 
 init([]) ->
     process_flag(trap_exit, true),
     {ok, SvrConf} = application:get_env(erl_ircclient, server),
     {ok, IRCConf} = application:get_env(erl_ircclient, irc),
-    {ok, M, Sock} = connect(SvrConf, IRCConf),
+    {ok, M, Sock} = reconnect(SvrConf, IRCConf),
     lager:info("ircclient initialized"),
     {ok, #{
         svr_conf => SvrConf,
@@ -51,6 +51,7 @@ handle_cast(Req, State) ->
 
 handle_info({tcp_closed, _} = Req, #{svr_conf := SvrConf, irc_conf := IRCConf} = State) ->
     lager:error("ircclient disconnected: tcp_closed"),
+    timer:sleep(5000),
     {ok, M, Sock} = reconnect(SvrConf, IRCConf),
     lager:info("ircclient reconnected"),
     {noreply, State#{
@@ -100,19 +101,23 @@ notice(Target, Msg) ->
 %%=== private ===%%
 
 connect({Host, Port, false}, IRCConf) ->
-    {ok, Sock} = gen_tcp:connect(Host, Port, [], infinity),
-    ok = send_init(gen_tcp, Sock, IRCConf),
-    {ok, gen_tcp, Sock};
-connect({Host, Port, true}, IRCConf) ->
-    {ok, Sock} = ssl:connect(Host, Port, [], infinity),
-    ok = send_init(ssl, Sock, IRCConf),
-    {ok, ssl, Sock}.
+    connect(gen_tcp, {Host, Port}, IRCConf).
+
+connect(M, {Host, Port}, IRCConf) ->
+    case M:connect(Host, Port, [], infinity) of
+        {ok, Sock} ->
+            ok = send_init(M, Sock, IRCConf),
+            {ok, M, Sock};
+        _ -> not_connected
+    end.
 
 reconnect(SvrConf, IRCConf) ->
-    timer:sleep(?RECONNECT_INTERVAL),
     case connect(SvrConf, IRCConf) of
         {ok, _, _} = Ret -> Ret;
-        _ -> reconnect(SvrConf, IRCConf)
+        _ ->
+            lager:error("reconnecting after ~p ms", [?RECONNECT_INTERVAL]),
+            timer:sleep(?RECONNECT_INTERVAL),
+            reconnect(SvrConf, IRCConf)
     end.
 
 send_init(M, Sock, {Nick, Chan}) ->
