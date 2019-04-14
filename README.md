@@ -1,9 +1,10 @@
 erl_ircclient
-=====
+=============
 
-An OTP application
+IRC client bot implemented over OTP application/supervisor/gen_server.
 
-Build
------
 
-    $ rebar3 compile
+HOW TO
+------
+
+    $ make clean all test release shell
