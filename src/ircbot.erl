@@ -1,4 +1,4 @@
--module(ircclient).
+-module(ircbot).
 
 -behavior(gen_server).
 
@@ -21,10 +21,10 @@
 
 init([]) ->
     process_flag(trap_exit, true),
-    {ok, SvrConf} = application:get_env(erl_ircclient, server),
-    {ok, IRCConf} = application:get_env(erl_ircclient, irc),
+    {ok, SvrConf} = application:get_env(erl_ircbot, server),
+    {ok, IRCConf} = application:get_env(erl_ircbot, irc),
     {ok, M, Sock} = reconnect(SvrConf, IRCConf),
-    lager:info("ircclient initialized"),
+    lager:info("ircbot initialized"),
     {ok, #{
         svr_conf => SvrConf,
         irc_conf => IRCConf,
@@ -35,7 +35,7 @@ init([]) ->
 terminate(_Reason, #{mod := M, sock := Sock}) ->
     process_flag(trap_exit, false),
     Ret = M:close(Sock),
-    lager:info("ircclient terminated"),
+    lager:info("ircbot terminated"),
     Ret.
 
 handle_call(Req, _From, State) ->
@@ -50,10 +50,10 @@ handle_cast(Req, State) ->
     {noreply, State}.
 
 handle_info({tcp_closed, _} = Req, #{svr_conf := SvrConf, irc_conf := IRCConf} = State) ->
-    lager:error("ircclient disconnected: tcp_closed"),
+    lager:error("ircbot disconnected: tcp_closed"),
     timer:sleep(5000),
     {ok, M, Sock} = reconnect(SvrConf, IRCConf),
-    lager:info("ircclient reconnected"),
+    lager:info("ircbot reconnected"),
     {noreply, State#{
         mod => M,
         sock => Sock

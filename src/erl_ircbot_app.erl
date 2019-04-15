@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc erl_ircclient public API
+%% @doc erl_ircbot public API
 %% @end
 %%%-------------------------------------------------------------------
 
--module(erl_ircclient_app).
+-module(erl_ircbot_app).
 
 -behaviour(application).
 
@@ -11,7 +11,7 @@
 
 start(_StartType, _StartArgs) ->
     lager:start(),
-    erl_ircclient_sup:start_link().
+    erl_ircbot_sup:start_link().
 
 stop(_State) ->
     ok.

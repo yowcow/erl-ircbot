@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc erl_ircclient top level supervisor.
+%% @doc erl_ircbot top level supervisor.
 %% @end
 %%%-------------------------------------------------------------------
 
--module(erl_ircclient_sup).
+-module(erl_ircbot_sup).
 
 -behaviour(supervisor).
 
@@ -24,12 +24,12 @@ init([]) ->
     },
     ChildSpec = [
         #{
-            id => ircclient,
-            start => {ircclient, start_link, []},
+            id => ircbot,
+            start => {ircbot, start_link, []},
             restart => permanent,
             shutdown => infinity,
             type => worker,
-            modules => [ircclient]
+            modules => [ircbot]
         }
     ],
     {ok, {SupFlags, ChildSpec}}.

@@ -1,5 +1,5 @@
-erl_ircclient
-=============
+erl-ircbot
+==========
 
 IRC client bot implemented over OTP application/supervisor/gen_server.
 
